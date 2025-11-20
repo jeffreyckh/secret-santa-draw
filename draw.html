@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>🎅 Secret Santa Draw</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body { font-family: Arial, sans-serif; padding: 20px; background: #fff0f5; text-align: center;}
+h2 { color: #c0392b; }
+button {
+    padding: 10px 20px; font-size: 18px; margin-top: 20px; cursor: pointer; 
+    border-radius: 5px; background-color: #27ae60; color: white; border: none;
+}
+button:hover { background-color: #2ecc71; }
+#resultCard {
+    margin-top: 30px;
+    padding: 20px;
+    background: #27ae60;
+    color: white;
+    border-radius: 15px;
+    font-size: 22px;
+    display: none;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+}
+</style>
+</head>
+<body>
+
+<h2>🎅 Secret Santa Draw</h2>
+<button onclick="drawName()">Draw 🎁</button>
+
+<div id="resultCard"></div>
+
+<script>
+// Get participant name from URL
+function getParticipantFromURL() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("user");
+}
+
+function drawName() {
+    const participant = getParticipantFromURL();
+    if(!participant){
+        alert("Invalid link. Please open your private link provided by the organizer.");
+        return;
+    }
+
+    let assignments = JSON.parse(localStorage.getItem("secretSantaAssignments") || "{}");
+    let remaining = JSON.parse(localStorage.getItem("secretSantaRemaining") || "[]");
+
+    if(!assignments[participant]){
+        alert("No assignment found for your name. Contact organizer.");
+        return;
+    }
+
+    if(!remaining.includes(participant)){
+        alert("You have already drawn your name.");
+        return;
+    }
+
+    const assignedName = assignments[participant];
+
+    // Remove participant from remaining pool
+    const index = remaining.indexOf(participant);
+    if(index > -1){
+        remaining.splice(index,1);
+    }
+    localStorage.setItem("secretSantaRemaining", JSON.stringify(remaining));
+
+    // Show Christmas-themed result card
+    const card = document.getElementById("resultCard");
+    card.innerHTML = "🎁 Your assigned person is:<br><strong>" + assignedName + "</strong>";
+    card.style.display = "block";
+}
+</script>
+
+</body>
+</html>
