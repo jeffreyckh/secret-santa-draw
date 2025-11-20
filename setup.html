@@ -65,6 +65,7 @@ button:hover { background-color: #2ecc71; }
 <textarea id="names" placeholder="Jeffrey&#10;Alice&#10;Ben"></textarea>
 <br>
 <button onclick="generateAssignments()">Generate Assignments & Links</button>
+<button onclick="redeployAssignments()">Redeploy / Refresh Assignments</button>
 <button onclick="resetEverything()">Reset Everything</button>
 
 <div class="link-box" id="links"></div>
@@ -82,6 +83,19 @@ for(let i=0;i<snowCount;i++){
     snow.style.opacity = 0.5 + Math.random()*0.5;
     document.body.appendChild(snow);
 }
+
+// Restore participant names if available
+window.onload = function() {
+    const savedParticipants = JSON.parse(localStorage.getItem("secretSantaParticipants") || "[]");
+    if(savedParticipants.length > 0){
+        document.getElementById("names").value = savedParticipants.join("\n");
+        // Regenerate links if assignments exist
+        const assignments = JSON.parse(localStorage.getItem("secretSantaAssignments") || "{}");
+        if(Object.keys(assignments).length > 0){
+            generateLinks(savedParticipants);
+        }
+    }
+}
 </script>
 
 <script>
@@ -93,6 +107,9 @@ function generateAssignments() {
         alert("Please enter at least 2 participants.");
         return;
     }
+
+    // Save participant list
+    localStorage.setItem("secretSantaParticipants", JSON.stringify(participants));
 
     // Generate derangement (no one gets themselves)
     let valid = false;
@@ -118,7 +135,14 @@ function generateAssignments() {
     localStorage.setItem("secretSantaAssignments", JSON.stringify(assignments));
     localStorage.setItem("secretSantaRemaining", JSON.stringify(participants));
 
-    // Generate private links
+    // Generate links
+    generateLinks(participants);
+
+    alert("🎄 Assignments generated! Private links created below.");
+}
+
+// Generate private draw links
+function generateLinks(participants){
     const linkDiv = document.getElementById("links");
     linkDiv.innerHTML = "<h3>Private Draw Links:</h3>";
     participants.forEach(p=>{
@@ -127,12 +151,18 @@ function generateAssignments() {
         pElem.innerHTML = `<a href="${url}" target="_blank">${p}'s link</a>`;
         linkDiv.appendChild(pElem);
     });
-
-    alert("🎄 Assignments generated! Private links created below.");
 }
 
+// Redeploy / refresh assignments
+function redeployAssignments() {
+    if(!confirm("This will clear previous assignments and generate new ones. Continue?")) return;
+    generateAssignments();
+}
+
+// Reset everything
 function resetEverything() {
     if(!confirm("Are you sure you want to reset all data? This cannot be undone.")) return;
+    localStorage.removeItem("secretSantaParticipants");
     localStorage.removeItem("secretSantaAssignments");
     localStorage.removeItem("secretSantaRemaining");
     document.getElementById("names").value = "";
