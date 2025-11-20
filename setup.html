@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>🎅 Secret Santa Organizer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body { font-family: Arial, sans-serif; padding: 20px; background: #fff0f5; }
+h2 { text-align: center; color: #c0392b; }
+textarea { width: 100%; height: 200px; font-size: 16px; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
+button { 
+    padding: 10px 20px; font-size: 18px; margin-top: 10px; cursor: pointer; 
+    border-radius: 5px; background-color: #27ae60; color: white; border: none;
+}
+button:hover { background-color: #2ecc71; }
+.link-box { margin-top: 20px; }
+.link-box p { margin: 5px 0; font-family: monospace; }
+</style>
+</head>
+<body>
+
+<h2>🎅 Secret Santa Organizer</h2>
+
+<p>Enter all participant names (one per line, including yourself):</p>
+<textarea id="names" placeholder="Jeffrey&#10;Alice&#10;Ben"></textarea>
+<br>
+<button onclick="generateAssignments()">Generate Assignments & Links</button>
+<button onclick="resetEverything()">Reset Everything</button>
+
+<div class="link-box" id="links"></div>
+
+<script>
+function generateAssignments() {
+    const raw = document.getElementById("names").value.trim();
+    let participants = raw.split("\n").map(n => n.trim()).filter(n => n.length > 0);
+
+    if(participants.length < 2) {
+        alert("Please enter at least 2 participants.");
+        return;
+    }
+
+    // Generate derangement (no one gets themselves)
+    let valid = false;
+    let receivers = [];
+    let assignments = {};
+    while(!valid){
+        receivers = [...participants];
+        for(let i = receivers.length -1; i>0; i--){
+            const j = Math.floor(Math.random() * (i+1));
+            [receivers[i], receivers[j]] = [receivers[j], receivers[i]];
+        }
+        valid = true;
+        for(let i=0;i<participants.length;i++){
+            if(participants[i] === receivers[i]){
+                valid=false;
+                break;
+            }
+            assignments[participants[i]] = receivers[i];
+        }
+    }
+
+    // Save assignments and remaining pool
+    localStorage.setItem("secretSantaAssignments", JSON.stringify(assignments));
+    localStorage.setItem("secretSantaRemaining", JSON.stringify(participants));
+
+    // Generate private links
+    const linkDiv = document.getElementById("links");
+    linkDiv.innerHTML = "<h3>Private Draw Links:</h3>";
+    participants.forEach(p=>{
+        const url = "draw.html?user=" + encodeURIComponent(p);
+        const pElem = document.createElement("p");
+        pElem.innerHTML = `<a href="${url}" target="_blank">${p}'s link</a>`;
+        linkDiv.appendChild(pElem);
+    });
+
+    alert("Assignments generated! Private links created below.");
+}
+
+function resetEverything() {
+    if(!confirm("Are you sure you want to reset all data? This cannot be undone.")) return;
+    localStorage.removeItem("secretSantaAssignments");
+    localStorage.removeItem("secretSantaRemaining");
+    document.getElementById("names").value = "";
+    document.getElementById("links").innerHTML = "";
+    alert("All data reset.");
+}
+</script>
+
+</body>
+</html>
