@@ -5,16 +5,56 @@
 <title>🎅 Secret Santa Organizer</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-body { font-family: Arial, sans-serif; padding: 20px; background: #fff0f5; }
-h2 { text-align: center; color: #c0392b; }
-textarea { width: 100%; height: 200px; font-size: 16px; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
-button { 
-    padding: 10px 20px; font-size: 18px; margin-top: 10px; cursor: pointer; 
-    border-radius: 5px; background-color: #27ae60; color: white; border: none;
+body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    background: linear-gradient(to bottom, #ffe6f0, #fff);
+    overflow-x: hidden;
+    position: relative;
+}
+h2 {
+    text-align: center;
+    color: #c0392b;
+    text-shadow: 2px 2px 5px #fff;
+}
+textarea {
+    width: 100%;
+    height: 200px;
+    font-size: 16px;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    resize: none;
+}
+button {
+    padding: 12px 25px;
+    font-size: 18px;
+    margin-top: 10px;
+    cursor: pointer;
+    border-radius: 10px;
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
 }
 button:hover { background-color: #2ecc71; }
 .link-box { margin-top: 20px; }
-.link-box p { margin: 5px 0; font-family: monospace; }
+.link-box p {
+    margin: 5px 0;
+    font-family: monospace;
+    background: #f9f9f9;
+    padding: 8px;
+    border-radius: 8px;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+}
+.snowflake {
+    position: fixed;
+    top: -10px;
+    color: #fff;
+    user-select: none;
+    z-index: 9999;
+    font-size: 1em;
+}
 </style>
 </head>
 <body>
@@ -28,6 +68,21 @@ button:hover { background-color: #2ecc71; }
 <button onclick="resetEverything()">Reset Everything</button>
 
 <div class="link-box" id="links"></div>
+
+<!-- Snow animation -->
+<script>
+const snowCount = 50;
+for(let i=0;i<snowCount;i++){
+    const snow = document.createElement('div');
+    snow.className = 'snowflake';
+    snow.innerHTML = '❄';
+    snow.style.left = Math.random()*100 + 'vw';
+    snow.style.fontSize = 12 + Math.random()*20 + 'px';
+    snow.style.animationDuration = 5 + Math.random()*10 + 's';
+    snow.style.opacity = 0.5 + Math.random()*0.5;
+    document.body.appendChild(snow);
+}
+</script>
 
 <script>
 function generateAssignments() {
@@ -73,7 +128,7 @@ function generateAssignments() {
         linkDiv.appendChild(pElem);
     });
 
-    alert("Assignments generated! Private links created below.");
+    alert("🎄 Assignments generated! Private links created below.");
 }
 
 function resetEverything() {
