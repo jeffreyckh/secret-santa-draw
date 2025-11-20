@@ -52,6 +52,15 @@ button:hover { background-color: #2ecc71; }
     z-index: 9999;
     font-size: 1em;
 }
+.confetti {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    background-color: red;
+    opacity: 0.8;
+    z-index: 9999;
+    pointer-events: none;
+}
 </style>
 </head>
 <body>
@@ -81,6 +90,30 @@ for(let i=0;i<snowCount;i++){
 function getParticipantFromURL() {
     const params = new URLSearchParams(window.location.search);
     return params.get("user");
+}
+
+// Confetti effect
+function launchConfetti() {
+    const colors = ['#e74c3c','#f1c40f','#2ecc71','#3498db','#9b59b6'];
+    for(let i=0;i<100;i++){
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.backgroundColor = colors[Math.floor(Math.random()*colors.length)];
+        confetti.style.left = Math.random()*100 + 'vw';
+        confetti.style.top = '-10px';
+        confetti.style.width = 5 + Math.random()*10 + 'px';
+        confetti.style.height = 5 + Math.random()*10 + 'px';
+        confetti.style.opacity = 0.7 + Math.random()*0.3;
+        document.body.appendChild(confetti);
+
+        const fallDuration = 2000 + Math.random()*2000;
+        confetti.animate([
+            { transform: `translateY(0px) rotate(0deg)` },
+            { transform: `translateY(${window.innerHeight + 20}px) rotate(${Math.random()*360}deg)` }
+        ], { duration: fallDuration, iterations: 1, easing: 'linear' });
+
+        setTimeout(()=>{ confetti.remove(); }, fallDuration);
+    }
 }
 
 function drawName() {
@@ -116,6 +149,9 @@ function drawName() {
     const card = document.getElementById("resultCard");
     card.innerHTML = "🎁 Your assigned person is:<br><strong>" + assignedName + "</strong>";
     card.style.display = "block";
+
+    // Launch confetti
+    launchConfetti();
 }
 </script>
 
