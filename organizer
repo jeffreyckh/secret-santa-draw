@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Secret Santa Organizer View</title>
+<style>
+body{font-family:Inter,sans-serif;margin:20px;background:#f7fafc;color:#111}
+h1{margin-bottom:10px}
+table{border-collapse:collapse;width:100%;max-width:600px}
+th,td{border:1px solid #d1d5db;padding:8px;text-align:left}
+th{background:#0369a1;color:white}
+</style>
+</head>
+<body>
+<h1>Secret Santa Organizer View</h1>
+<table>
+<thead><tr><th>Name</th><th>Location</th><th>Recipient</th></tr></thead>
+<tbody id="tableBody"></tbody>
+</table>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/YOUR_DEPLOYED_WEB_APP_URL/exec";
+
+async function loadAssignments(){
+  const res = await fetch(API_URL);
+  const participants = await res.json();
+  const tbody=document.getElementById("tableBody");
+  tbody.innerHTML="";
+  participants.forEach(p=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${p.name}</td><td>${p.loc}</td><td>${p.recipient||"-"}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// Refresh every 10s
+loadAssignments();
+setInterval(loadAssignments,10000);
+</script>
+</body>
+</html>
