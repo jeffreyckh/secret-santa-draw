@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Secret Santa Live</title>
+<style>
+body{font-family:Inter,sans-serif;margin:20px;background:#f7fafc;color:#111}
+h1{margin-bottom:10px}
+p.lead{margin-bottom:18px;color:#374151}
+select,button{padding:8px;margin:4px;border-radius:6px;border:1px solid #d1d5db;font-size:16px}
+button{background:#0369a1;color:white;cursor:pointer}
+button.ghost{background:#e6edf3;color:#0369a1}
+#selfResult{margin-top:12px;font-weight:bold;color:#0369a1;font-size:18px}
+</style>
+</head>
+<body>
+<h1>Secret Santa Draw</h1>
+<p class="lead">Select your name to draw your recipient. Only you will see your result. Draw respects location restrictions.</p>
+
+<select id="selfSelect">
+  <option value="">-- Select your name --</option>
+</select>
+<button onclick="selfDrawRecipient()">Draw Recipient</button>
+<p id="selfResult"></p>
+
+<script>
+// ---- CONFIG ----
+const API_URL = "https://script.google.com/macros/s/YOUR_DEPLOYED_WEB_APP_URL/exec"; 
+// Replace YOUR_DEPLOYED_WEB_APP_URL with your Apps Script Web App URL
+
+// ---- STATE ----
+let participants = [];
+let drawnFlags = [];
+let giverUsed = [];
+
+// ---- LOAD PARTICIPANTS ----
+async function loadParticipants(){
+    try{
+        const res = await fetch(API_URL);
+        participants = await res.json();
+        drawnFlags = participants.map(p=>p.recipient !== '');
+        giverUsed = participants.map(p=>p.recipient !== '');
+        populateDropdown();
+    }catch(e){
+        console.error("Failed to load participants:", e);
+    }
+}
+
+function populateDropdown(){
+    const select = document.getElementById("selfSelect");
+    participants.forEach((p,i)=>{
+        const opt = document.createElement("option");
+        opt.value = i; opt.textContent = p.name + " (" + p.loc + ")";
+        select.appendChild(opt);
+    });
+}
+
+// ---- DRAW FUNCTION ----
+async function selfDrawRecipient(){
+    const sel = document.getElementById("selfSelect");
+    const giverIndex = parseInt(sel.value,10);
+    if(isNaN(giverIndex)){
+        alert("Please select your name!");
+        return;
+    }
+    if(giverUsed[giverIndex]){
+        document.getElementById("selfResult").textContent = "You already drew once!";
+        return;
+    }
+    const giver = participants[giverIndex];
+    const candidates = participants.filter((p,i)=>i!==giverIndex && !drawnFlags[i] && p.loc!==giver.loc);
+    if(candidates.length===0){
+        document.getElementById("selfResult").textContent = "No valid recipient available (location restriction).";
+        return;
+    }
+    const choice = candidates[Math.floor(Math.random()*candidates.length)];
+
+    // Send draw to Apps Script
+    const payload = {giverIndex, recipientName: choice.name};
+    await fetch(API_URL, {method:'POST',body:JSON.stringify(payload)});
+    
+    document.getElementById("selfResult").textContent = `You got: ${choice.name}`;
+    drawnFlags[participants.indexOf(choice)] = true;
+    giverUsed[giverIndex] = true;
+}
+
+// ---- RESET FUNCTION (session only) ----
+function resetSelfDraws(){
+    drawnFlags = Array(participants.length).fill(false);
+    giverUsed = Array(participants.length).fill(false);
+    document.getElementById("selfResult").textContent = "All draws have been reset (session only).";
+}
+
+// ---- INIT ----
+loadParticipants();
+</script>
+</body>
+</html>
