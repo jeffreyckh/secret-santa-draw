@@ -14,7 +14,7 @@ button{background:#0369a1;color:white;cursor:pointer}
 </head>
 <body>
 <h1>Secret Santa Draw</h1>
-<p>Select your name to draw your recipient (private).</p>
+<p>Select your name to draw your recipient (private). Location restrictions apply.</p>
 
 <select id="selfSelect"><option value="">-- Select your name --</option></select>
 <button onclick="selfDrawRecipient()">Draw Recipient</button>
@@ -26,31 +26,44 @@ const API_URL = "https://script.google.com/macros/s/AKfycbyuhKqidBzNJCAHOftS_gAA
 let participants = [], drawnFlags=[], giverUsed=[];
 
 async function loadParticipants(){
-  const res = await fetch(API_URL);
-  participants = await res.json();
-  drawnFlags = participants.map(p=>p.recipient!=='');
-  giverUsed = participants.map(p=>p.recipient!=='');
-  const sel = document.getElementById("selfSelect");
-  participants.forEach((p,i)=>{
-    const opt=document.createElement("option");
-    opt.value=i; opt.textContent=p.name + " (" + p.loc + ")";
-    sel.appendChild(opt);
-  });
+    try{
+        const res = await fetch(API_URL);
+        participants = await res.json();
+        drawnFlags = participants.map(p=>p.recipient!=='');
+        giverUsed = participants.map(p=>p.recipient!=='');
+        const sel = document.getElementById("selfSelect");
+        participants.forEach((p,i)=>{
+            const opt=document.createElement("option");
+            opt.value=i;
+            opt.textContent=p.name + " (" + p.loc + ")";
+            sel.appendChild(opt);
+        });
+    }catch(e){
+        console.error("Failed to load participants:", e);
+        alert("Failed to load participants. Check your Web App URL and CORS settings.");
+    }
 }
 
 async function selfDrawRecipient(){
-  const sel = document.getElementById("selfSelect");
-  const giverIndex=parseInt(sel.value,10);
-  if(isNaN(giverIndex)){ alert("Select your name"); return; }
-  if(giverUsed[giverIndex]){document.getElementById("selfResult").textContent="You already drew!"; return;}
-  const giver = participants[giverIndex];
-  const candidates = participants.filter((p,i)=>i!==giverIndex&&!drawnFlags[i]&&p.loc!==giver.loc);
-  if(candidates.length===0){document.getElementById("selfResult").textContent="No valid recipient";return;}
-  const choice = candidates[Math.floor(Math.random()*candidates.length)];
-  await fetch(API_URL,{method:'POST',body:JSON.stringify({giverIndex,recipientName:choice.name})});
-  document.getElementById("selfResult").textContent=`You got: ${choice.name}`;
-  drawnFlags[participants.indexOf(choice)]=true;
-  giverUsed[giverIndex]=true;
+    const sel = document.getElementById("selfSelect");
+    const giverIndex=parseInt(sel.value,10);
+    if(isNaN(giverIndex)){ alert("Please select your name!"); return; }
+    if(giverUsed[giverIndex]){ document.getElementById("selfResult").textContent="You already drew!"; return; }
+    const giver = participants[giverIndex];
+    const candidates = participants.filter((p,i)=>i!==giverIndex&&!drawnFlags[i]&&p.loc!==giver.loc);
+    if(candidates.length===0){ document.getElementById("selfResult").textContent="No valid recipient available"; return; }
+    const choice = candidates[Math.floor(Math.random()*candidates.length)];
+
+    // POST to Apps Script
+    await fetch(API_URL,{
+        method:'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({giverIndex,recipientName:choice.name})
+    });
+
+    document.getElementById("selfResult").textContent = `You got: ${choice.name}`;
+    drawnFlags[participants.indexOf(choice)] = true;
+    giverUsed[giverIndex] = true;
 }
 
 loadParticipants();
